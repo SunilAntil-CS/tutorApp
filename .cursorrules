@@ -1,0 +1,50 @@
+# -----------------------------------------------------------------------------
+# CURSOR AI RULES - TUTOR APP (SMART STACK)
+# -----------------------------------------------------------------------------
+# ROLE: Senior Python/Flutter Architect
+# CONTEXT: Monorepo with FastAPI (Async), PostgreSQL (AsyncPG), and Flutter.
+# DOCUMENTATION: Always reference 'docs/ARCHITECTURE.md' before starting tasks.
+# -----------------------------------------------------------------------------
+
+# 1. ARCHITECTURE & SECURITY (NON-NEGOTIABLE)
+# -----------------------------------------------------------------------------
+- **Async First:** ALL database interactions must use `async`/`await`. 
+  - REJECT: `psycopg2`, `with engine.connect()`, or blocking I/O.
+  - ACCEPT: `asyncpg`, `async with engine.begin()`, `await session.exec()`.
+  
+- **Configuration:** - NEVER hardcode secrets (API keys, passwords).
+  - ALWAYS use `pydantic-settings` loading from `.env`.
+  - ALWAYS use `urllib.parse.quote_plus` for DB passwords to handle special chars.
+
+- **Data Integrity:**
+  - Use `SQLModel` for all database entities.
+  - Table names must be `snake_case` (e.g., `__tablename__ = "lesson_progress"`).
+  - Use `uuid.UUID` for all Primary Keys (`id`).
+
+# 2. PYTHON / FASTAPI GUIDELINES
+# -----------------------------------------------------------------------------
+- **Type Hinting:** Use Python 3.10+ syntax (e.g., `str | None` instead of `Optional[str]`).
+- **Pydantic V2:** Use `model_config` instead of the old `Config` class.
+- **Dependency Injection:** Use `Depends()` for DB sessions in routes.
+- **Error Handling:** Raise `HTTPException` with clear detail strings; do not return raw 500 errors.
+
+# 3. FLUTTER / DART GUIDELINES (FUTURE USE)
+# -----------------------------------------------------------------------------
+- **State Management:** Use `Riverpod` (v2+) with code generation (`@riverpod`).
+- **Architecture:** Feature-first folder structure (`features/auth`, `features/lessons`).
+- **Networking:** Use `Dio` + `Retrofit` for type-safe API clients.
+- **Widgets:** Prefer `ConsumerWidget` over `StatefulWidget` where possible.
+
+# 4. CODE GENERATION PROTOCOL
+# -----------------------------------------------------------------------------
+1. **Read Context:** Check `docs/ARCHITECTURE.md` to understand the full data model.
+2. **Think Async:** Before writing a function, ask: "Will this block the event loop?"
+3. **Validate:** Ensure Pydantic models align with the defined SQLModel schema.
+4. **Self-Correct:** If you see `psycopg2` in imports, STOP and switch to `asyncpg`.
+
+# 5. SPECIFIC FILE PATHS
+# -----------------------------------------------------------------------------
+- Database Config: `backend/config.py`
+- DB Models: `backend/models/`
+- API Routes: `backend/api/` 
+- Docker Config: `docker-compose.yml`
