@@ -1,4 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlmodel
-psycopg2-binary
+asyncpg
+pydantic-settings
