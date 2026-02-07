@@ -2,7 +2,7 @@
 # Production-grade Dockerfile for FastAPI backend
 
 # ---- Builder ----
-FROM python:3.11-slim as builder
+FROM python:3.11-slim-bookworm as builder
 
 WORKDIR /build
 
@@ -19,7 +19,7 @@ COPY requirements.txt .
 RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
 
 # ---- Runtime ----
-FROM python:3.11-slim as runtime
+FROM python:3.11-slim-bookworm as runtime
 
 RUN groupadd --gid 1000 app \
     && useradd --uid 1000 --gid app --shell /bin/bash --create-home app
@@ -33,6 +33,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
+    wkhtmltopdf \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -40,6 +41,9 @@ COPY --from=builder /wheels /wheels
 RUN pip install --no-cache /wheels/* && rm -rf /wheels
 
 COPY --chown=app:app . .
+
+# So the app user can write logs when LOG_FILE is used (e.g. logs/backend.log).
+RUN mkdir -p /app/logs && chown -R app:app /app/logs
 
 USER app
 

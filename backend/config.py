@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
 
+    # Logging — configurable file and level
+    LOG_LEVEL: str = "INFO"
+    LOG_FILE: str = "logs/backend.log"  # Relative to backend dir or absolute; set to "" for console only
+
     @property
     def database_url(self) -> str:
         """Async Postgres URL with quoted user/password (safe for special characters)."""

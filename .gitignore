@@ -44,6 +44,10 @@ build/
 .idea/
 *.lock
 
+# Logs
+logs/
+*.log
+
 # OS
 .DS_Store
 Thumbs.db

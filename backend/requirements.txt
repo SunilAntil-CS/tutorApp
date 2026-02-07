@@ -3,3 +3,5 @@ uvicorn[standard]
 sqlmodel
 asyncpg
 pydantic-settings
+pdfkit
+jinja2
