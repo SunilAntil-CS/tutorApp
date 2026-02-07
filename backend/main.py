@@ -115,7 +115,7 @@ def root():
 
 @app.get("/health")
 async def health():
-    """Verify application and database connectivity. Returns 503 if DB unreachable."""
+    """Verify application and database connectivity. Used by Docker/Coolify healthcheck; returns 503 if DB unreachable."""
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))

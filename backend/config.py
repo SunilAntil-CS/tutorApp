@@ -33,9 +33,10 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
 
-    # Logging — configurable file and level
+    # Logging — configurable file and level; LOG_FORMAT=json for structured stdout (e.g. Coolify/container)
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "logs/backend.log"  # Relative to backend dir or absolute; set to "" for console only
+    LOG_FORMAT: str = "json"  # "json" (one JSON object per line to stdout) or "text"
 
     @property
     def database_url(self) -> str:

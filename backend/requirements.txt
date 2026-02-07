@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 sqlmodel
 asyncpg
+greenlet
 pydantic-settings
 pdfkit
 jinja2
