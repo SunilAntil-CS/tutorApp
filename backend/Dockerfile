@@ -47,10 +47,10 @@ RUN mkdir -p /app/logs && chown -R app:app /app/logs
 
 USER app
 
-EXPOSE 8000
+EXPOSE 8001
 
 HEALTHCHECK --interval=60s --timeout=5s --start-period=15s --retries=3 \
-    CMD curl --fail http://localhost:8000/health || exit 1
+    CMD curl --fail http://localhost:8001/health || exit 1
 
 # 7. Production Command: Added proxy headers for Coolify's Traefik proxy
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips='*'"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--proxy-headers", "--forwarded-allow-ips='*'"]
