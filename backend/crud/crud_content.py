@@ -5,7 +5,16 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.tenant_context import get_tenant_id
 from models.content import Book, Chapter, Lesson, LessonProgress, Quiz
+
+
+def _require_tenant_id() -> str:
+    """Fail fast if tenant context is missing (prevents cross-tenant data access)."""
+    tenant_id = get_tenant_id()
+    if not tenant_id or tenant_id == "unknown":
+        raise ValueError("Tenant Context Missing in CRUD")
+    return tenant_id
 
 
 class CRUDContent:
@@ -14,14 +23,16 @@ class CRUDContent:
     # ----- Books -----
 
     async def get_books(self, session: AsyncSession) -> list[Book]:
-        """Select all books, ordered by grade then title."""
-        stmt = select(Book).order_by(Book.grade, Book.title)
+        """Select all books for the current tenant, ordered by grade then title."""
+        tenant_id = _require_tenant_id()
+        stmt = select(Book).where(Book.tenant_id == tenant_id).order_by(Book.grade, Book.title)
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
     async def get_book_by_id(self, session: AsyncSession, book_id: UUID) -> Book | None:
-        """Select a single book by id."""
-        stmt = select(Book).where(Book.id == book_id)
+        """Select a single book by id (tenant-scoped)."""
+        tenant_id = _require_tenant_id()
+        stmt = select(Book).where(Book.id == book_id, Book.tenant_id == tenant_id)
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -45,8 +56,13 @@ class CRUDContent:
     # ----- Chapters -----
 
     async def get_chapters_by_book_id(self, session: AsyncSession, book_id: UUID) -> list[Chapter]:
-        """Select chapters for a book, ordered by sequence_number."""
-        stmt = select(Chapter).where(Chapter.book_id == book_id).order_by(Chapter.sequence_number)
+        """Select chapters for a book (tenant-scoped), ordered by sequence_number."""
+        tenant_id = _require_tenant_id()
+        stmt = (
+            select(Chapter)
+            .where(Chapter.book_id == book_id, Chapter.tenant_id == tenant_id)
+            .order_by(Chapter.sequence_number)
+        )
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
@@ -69,16 +85,22 @@ class CRUDContent:
     # ----- Lessons -----
 
     async def get_lessons_by_chapter_id(self, session: AsyncSession, chapter_id: UUID) -> list[Lesson]:
-        """Select lessons for a chapter (order can be by id or a future sequence field)."""
-        stmt = select(Lesson).where(Lesson.chapter_id == chapter_id).order_by(Lesson.title)
+        """Select lessons for a chapter (tenant-scoped), ordered by title."""
+        tenant_id = _require_tenant_id()
+        stmt = (
+            select(Lesson)
+            .where(Lesson.chapter_id == chapter_id, Lesson.tenant_id == tenant_id)
+            .order_by(Lesson.title)
+        )
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
     async def get_quick_notes(
         self, session: AsyncSession, subject: str | None = None
     ) -> list[Lesson]:
-        """Select standalone lessons (Quick Concepts) where is_quick_note is True. Optional filter by subject. Order by title."""
-        stmt = select(Lesson).where(Lesson.is_quick_note == True)
+        """Select standalone lessons (Quick Concepts) for current tenant. Optional filter by subject."""
+        tenant_id = _require_tenant_id()
+        stmt = select(Lesson).where(Lesson.is_quick_note == True, Lesson.tenant_id == tenant_id)
         if subject is not None:
             stmt = stmt.where(Lesson.subject == subject)
         stmt = stmt.order_by(Lesson.title)
@@ -86,8 +108,9 @@ class CRUDContent:
         return list(result.scalars().all())
 
     async def get_lesson_by_id(self, session: AsyncSession, lesson_id: UUID) -> Lesson | None:
-        """Select a single lesson by id."""
-        stmt = select(Lesson).where(Lesson.id == lesson_id)
+        """Select a single lesson by id (tenant-scoped)."""
+        tenant_id = _require_tenant_id()
+        stmt = select(Lesson).where(Lesson.id == lesson_id, Lesson.tenant_id == tenant_id)
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -125,8 +148,9 @@ class CRUDContent:
     # ----- Quizzes -----
 
     async def get_quiz_by_lesson_id(self, session: AsyncSession, lesson_id: UUID) -> Quiz | None:
-        """Select the quiz for a lesson (if any)."""
-        stmt = select(Quiz).where(Quiz.lesson_id == lesson_id)
+        """Select the quiz for a lesson (tenant-scoped, if any)."""
+        tenant_id = _require_tenant_id()
+        stmt = select(Quiz).where(Quiz.lesson_id == lesson_id, Quiz.tenant_id == tenant_id)
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -150,8 +174,10 @@ class CRUDContent:
     async def get_lesson_progress(
         self, session: AsyncSession, user_id: UUID, lesson_id: UUID
     ) -> LessonProgress | None:
-        """Get progress for a user on a lesson."""
+        """Get progress for a user on a lesson (tenant-scoped)."""
+        tenant_id = _require_tenant_id()
         stmt = select(LessonProgress).where(
+            LessonProgress.tenant_id == tenant_id,
             LessonProgress.user_id == user_id,
             LessonProgress.lesson_id == lesson_id,
         )

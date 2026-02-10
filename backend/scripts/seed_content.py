@@ -22,6 +22,8 @@ from config import settings
 from models.content import Book, Chapter, Lesson, Question, Quiz, Tenant
 
 DEFAULT_TENANT_ID = "default"
+# Second tenant for testing tenant isolation (GET /books with X-Tenant-ID: default vs school-b).
+SECOND_TENANT_ID = "school-b"
 
 
 # Use same engine config as main app; models already registered via import above
@@ -152,9 +154,40 @@ async def _ensure_default_tenant(session: AsyncSession) -> None:
         await session.flush()
 
 
+async def _ensure_second_tenant(session: AsyncSession) -> None:
+    """Ensure second tenant + one book exist (for testing tenant isolation in CRUD/Swagger)."""
+    result = await session.execute(select(Tenant).where(Tenant.id == SECOND_TENANT_ID))
+    if result.scalar_one_or_none() is not None:
+        return
+    session.add(Tenant(id=SECOND_TENANT_ID, name="School B", config_json="{}"))
+    await session.flush()
+
+    if await _book_exists(session, "Math Class 9"):
+        return
+    book = Book(
+        tenant_id=SECOND_TENANT_ID,
+        title="Math Class 9",
+        subject="Math",
+        grade=9,
+    )
+    session.add(book)
+    await session.flush()
+    session.add(
+        Chapter(
+            book_id=book.id,
+            tenant_id=SECOND_TENANT_ID,
+            sequence_number=1,
+            title="Number Systems",
+        )
+    )
+    await session.flush()
+    print("Seeded: tenant 'school-b' with book 'Math Class 9' (for isolation testing).")
+
+
 async def seed() -> None:
     async with _session_maker() as session:
         await _ensure_default_tenant(session)
+        await _ensure_second_tenant(session)
 
         if not await _book_exists(session, "Science Class 10"):
             book = Book(

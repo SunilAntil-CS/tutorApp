@@ -115,6 +115,17 @@ def custom_openapi():
         routes=app.routes,
     )
     schema["servers"] = [{"url": "/"}]
+    # Expose X-Tenant-ID in Swagger Authorize so you can set it once for all requests.
+    schema["components"] = schema.get("components") or {}
+    schema["components"]["securitySchemes"] = {
+        "X-Tenant-ID": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Tenant-ID",
+            "description": "Tenant identifier (required for /api/v1/content/*). Use 'default' if you ran the seed.",
+        }
+    }
+    schema["security"] = [{"X-Tenant-ID": []}]
     app.openapi_schema = schema
     return app.openapi_schema
 
