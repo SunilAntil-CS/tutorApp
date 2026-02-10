@@ -19,7 +19,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from config import settings
-from models.content import Book, Chapter, Lesson, Question, Quiz
+from models.content import Book, Chapter, Lesson, Question, Quiz, Tenant
+
+DEFAULT_TENANT_ID = "default"
 
 
 # Use same engine config as main app; models already registered via import above
@@ -67,20 +69,22 @@ async def _seed_quick_notes(session: AsyncSession) -> None:
 
     quick_notes = [
         Lesson(
+            tenant_id=DEFAULT_TENANT_ID,
             chapter_id=None,
             title="What is a Chemical Equation?",
             subject="Science",
             is_quick_note=True,
             video_id=None,
-            pdf_url="/static/quick-notes/chem-equation.pdf",
+            pdf_url="https://drive.google.com/uc?export=download&id=1AFewMW0uS7QvqgoqTKp5wQd5zzDIorca",
             duration_seconds=180,
         ),
         Lesson(
+            tenant_id=DEFAULT_TENANT_ID,
             chapter_id=None,
             title="Introduction to Light – Reflection",
             subject="Science",
             is_quick_note=True,
-            video_id="dQw4w9WgXcQ",
+            video_id="Xf_VZ8GxU1Y",
             pdf_url=None,
             duration_seconds=300,
         ),
@@ -97,12 +101,13 @@ async def _seed_quiz_for_lesson(session: AsyncSession, lesson: Lesson) -> None:
         print("Quiz already exists for this lesson.")
         return
 
-    quiz = Quiz(lesson_id=lesson.id, title="Balancing Equations Check")
+    quiz = Quiz(tenant_id=lesson.tenant_id, lesson_id=lesson.id, title="Balancing Equations Check")
     session.add(quiz)
     await session.flush()
 
     questions = [
         Question(
+            tenant_id=lesson.tenant_id,
             quiz_id=quiz.id,
             text="What is the coefficient of H2 in 2H2 + O2 -> 2H2O?",
             option_a="1",
@@ -112,6 +117,7 @@ async def _seed_quiz_for_lesson(session: AsyncSession, lesson: Lesson) -> None:
             correct_answer="B",
         ),
         Question(
+            tenant_id=lesson.tenant_id,
             quiz_id=quiz.id,
             text="Is mass conserved in a chemical reaction?",
             option_a="Yes",
@@ -121,6 +127,7 @@ async def _seed_quiz_for_lesson(session: AsyncSession, lesson: Lesson) -> None:
             correct_answer="A",
         ),
         Question(
+            tenant_id=lesson.tenant_id,
             quiz_id=quiz.id,
             text="What implies a gas is evolved?",
             option_a="Down Arrow",
@@ -137,10 +144,21 @@ async def _seed_quiz_for_lesson(session: AsyncSession, lesson: Lesson) -> None:
     print("Seeded: Quiz 'Balancing Equations Check' with 3 questions.")
 
 
+async def _ensure_default_tenant(session: AsyncSession) -> None:
+    """Ensure default tenant exists (for seed and local dev)."""
+    result = await session.execute(select(Tenant).where(Tenant.id == DEFAULT_TENANT_ID))
+    if result.scalar_one_or_none() is None:
+        session.add(Tenant(id=DEFAULT_TENANT_ID, name="Tutor App", config_json="{}"))
+        await session.flush()
+
+
 async def seed() -> None:
     async with _session_maker() as session:
+        await _ensure_default_tenant(session)
+
         if not await _book_exists(session, "Science Class 10"):
             book = Book(
+                tenant_id=DEFAULT_TENANT_ID,
                 title="Science Class 10",
                 subject="Science",
                 grade=10,
@@ -151,6 +169,7 @@ async def seed() -> None:
 
             chapter = Chapter(
                 book_id=book.id,
+                tenant_id=DEFAULT_TENANT_ID,
                 title="Chemical Reactions",
                 sequence_number=1,
             )
@@ -158,6 +177,7 @@ async def seed() -> None:
             await session.flush()
 
             lesson = Lesson(
+                tenant_id=DEFAULT_TENANT_ID,
                 chapter_id=chapter.id,
                 title="Balancing Chemical Equations",
                 video_id="dQw4w9WgXcQ",

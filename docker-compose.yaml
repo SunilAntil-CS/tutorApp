@@ -1,5 +1,6 @@
 # Backend only. Database is an external dependency; inject DB_* via environment.
 # Provide .env or set DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME at runtime.
+# On startup the container runs: alembic upgrade head, then uvicorn. View logs: docker compose logs -f backend
 
 services:
   backend:
@@ -16,10 +17,10 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
     ports:
-      - "8001:8001"
+      - "8000:8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 30s

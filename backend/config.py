@@ -51,5 +51,18 @@ class Settings(BaseSettings):
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
+    @property
+    def database_url_sync(self) -> str:
+        """Sync Postgres URL for Alembic (postgresql://, no asyncpg)."""
+        if self.DATABASE_URL and self.DATABASE_URL.strip():
+            url = self.DATABASE_URL.strip()
+            return url.replace("postgresql+asyncpg://", "postgresql://", 1)
+        user = quote_plus(self.DB_USER)
+        password = quote_plus(self.DB_PASSWORD)
+        return (
+            f"postgresql://{user}:{password}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
+
 
 settings = Settings()

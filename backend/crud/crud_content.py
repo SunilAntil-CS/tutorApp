@@ -25,9 +25,18 @@ class CRUDContent:
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def create_book(self, session: AsyncSession, *, title: str, grade: int, subject: str, cover_image: str | None = None) -> Book:
+    async def create_book(
+        self,
+        session: AsyncSession,
+        *,
+        tenant_id: str,
+        title: str,
+        grade: int,
+        subject: str,
+        cover_image: str | None = None,
+    ) -> Book:
         """Insert a book."""
-        book = Book(title=title, grade=grade, subject=subject, cover_image=cover_image)
+        book = Book(tenant_id=tenant_id, title=title, grade=grade, subject=subject, cover_image=cover_image)
         session.add(book)
         await session.commit()
         await session.refresh(book)
@@ -41,9 +50,17 @@ class CRUDContent:
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
-    async def create_chapter(self, session: AsyncSession, *, book_id: UUID, sequence_number: int, title: str) -> Chapter:
+    async def create_chapter(
+        self,
+        session: AsyncSession,
+        *,
+        book_id: UUID,
+        tenant_id: str,
+        sequence_number: int,
+        title: str,
+    ) -> Chapter:
         """Insert a chapter."""
-        chapter = Chapter(book_id=book_id, sequence_number=sequence_number, title=title)
+        chapter = Chapter(book_id=book_id, tenant_id=tenant_id, sequence_number=sequence_number, title=title)
         session.add(chapter)
         await session.commit()
         await session.refresh(chapter)
@@ -78,6 +95,7 @@ class CRUDContent:
         self,
         session: AsyncSession,
         *,
+        tenant_id: str,
         title: str,
         chapter_id: UUID | None = None,
         subject: str | None = None,
@@ -89,6 +107,7 @@ class CRUDContent:
     ) -> Lesson:
         """Insert a lesson (book chapter lesson or standalone quick note)."""
         lesson = Lesson(
+            tenant_id=tenant_id,
             title=title,
             chapter_id=chapter_id,
             subject=subject,
@@ -111,9 +130,16 @@ class CRUDContent:
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def create_quiz(self, session: AsyncSession, *, lesson_id: UUID, title: str = "Quiz") -> Quiz:
+    async def create_quiz(
+        self,
+        session: AsyncSession,
+        *,
+        tenant_id: str,
+        lesson_id: UUID,
+        title: str = "Quiz",
+    ) -> Quiz:
         """Insert a quiz."""
-        quiz = Quiz(lesson_id=lesson_id, title=title)
+        quiz = Quiz(tenant_id=tenant_id, lesson_id=lesson_id, title=title)
         session.add(quiz)
         await session.commit()
         await session.refresh(quiz)
@@ -136,6 +162,7 @@ class CRUDContent:
         self,
         session: AsyncSession,
         *,
+        tenant_id: str,
         user_id: UUID,
         lesson_id: UUID,
         is_completed: bool = False,
@@ -151,6 +178,7 @@ class CRUDContent:
             await session.refresh(existing)
             return existing
         row = LessonProgress(
+            tenant_id=tenant_id,
             user_id=user_id,
             lesson_id=lesson_id,
             is_completed=is_completed,

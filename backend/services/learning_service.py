@@ -176,8 +176,11 @@ async def submit_quiz_attempt(
         score_percentage = (correct / total) * 100.0
     passed = score_percentage > 70
     if passed:
+        lesson = await crud_content.get_lesson_by_id(session, lesson_id)
+        tenant_id = lesson.tenant_id if lesson else "default"
         await crud_content.upsert_lesson_progress(
             session,
+            tenant_id=tenant_id,
             user_id=user_id,
             lesson_id=lesson_id,
             is_completed=True,

@@ -12,7 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import text
-from sqlmodel import SQLModel
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
@@ -23,7 +22,18 @@ setup_logging()
 log = get_logger("main")
 
 # Import models so SQLModel.metadata knows about all tables
-from models.content import Book, Chapter, Lesson, Quiz, Question, LessonProgress  # noqa: F401
+from models.content import (  # noqa: F401
+    Book,
+    Chapter,
+    Concept,
+    LearningEvent,
+    Lesson,
+    LessonProgress,
+    Question,
+    Quiz,
+    Tenant,
+    User,
+)
 
 # Async engine with pool settings from config
 engine = create_async_engine(
@@ -42,12 +52,9 @@ async_session_maker = async_sessionmaker(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create all SQLModel tables on startup; dispose engine on shutdown."""
-    log.info("Starting up: creating tables")
+    """Wire session maker; schema is managed by Alembic (alembic upgrade head)."""
+    log.info("Starting up")
     app.state.async_session_maker = async_session_maker
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-    log.info("Startup complete")
     yield
     await engine.dispose()
     log.info("Shutdown complete")

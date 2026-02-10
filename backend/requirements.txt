@@ -6,3 +6,6 @@ greenlet
 pydantic-settings
 pdfkit
 jinja2
+alembic
+psycopg2-binary
+async-lru==2.0.4
