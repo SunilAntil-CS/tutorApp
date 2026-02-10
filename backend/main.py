@@ -15,6 +15,7 @@ from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
+from api import deps as api_deps
 from config import settings
 from logging_config import get_logger, setup_logging
 from core.tenant_context import get_tenant_id
@@ -57,6 +58,7 @@ async def lifespan(app: FastAPI):
     """Wire session maker; schema is managed by Alembic (alembic upgrade head)."""
     log.info("Starting up")
     app.state.async_session_maker = async_session_maker
+    api_deps.set_async_session_maker(async_session_maker)
     yield
     await engine.dispose()
     log.info("Shutdown complete")

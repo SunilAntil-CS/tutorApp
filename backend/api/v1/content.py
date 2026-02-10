@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.deps import get_current_user_id, get_db
+from api.deps import get_current_tenant, get_current_user_id, get_db
 from logging_config import get_logger
 from schemas.content_schema import (
     BookResponse,
@@ -21,7 +21,8 @@ from services import learning_service
 
 log = get_logger("api.content")
 
-router = APIRouter()
+# Tenant gatekeeper: every route under this router validates tenant (DB + cache).
+router = APIRouter(dependencies=[Depends(get_current_tenant)])
 
 
 @router.get("/books", response_model=list[BookResponse])
