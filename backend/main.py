@@ -17,6 +17,8 @@ from starlette.requests import Request
 
 from config import settings
 from logging_config import get_logger, setup_logging
+from core.tenant_context import get_tenant_id
+from middleware import TenantMiddleware
 
 setup_logging()
 log = get_logger("main")
@@ -80,6 +82,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(RequestLoggingMiddleware)
 
+# Tenant context: run first so logging and routes see tenant_id (last added = first to run).
+app.add_middleware(TenantMiddleware)
+
 # CORS: allow /docs (Swagger UI), /openapi.json, and all API routes from any origin.
 app.add_middleware(
     CORSMiddleware,
@@ -118,6 +123,12 @@ app.openapi = custom_openapi
 @app.get("/")
 def root():
     return {"message": "Hello World", "app": settings.APP_NAME}
+
+
+@app.get("/debug/tenant")
+def debug_tenant():
+    """Return current tenant_id from context (for testing TenantMiddleware). Remove or restrict in production."""
+    return {"tenant_id": get_tenant_id()}
 
 
 @app.get("/health")

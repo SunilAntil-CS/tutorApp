@@ -6,17 +6,26 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from config import settings
+from core.tenant_context import get_tenant_id
 
 
 class JsonFormatter(logging.Formatter):
-    """Emit one JSON object per log record to stdout for log aggregators and Coolify."""
+    """Emit one JSON object per log record to stdout for log aggregators and Coolify.
+
+    Java Bridge: Customizing this Formatter is equivalent to configuring a Logback Layout
+    (e.g. PatternLayout or a custom Layout) that adds MDC keys to each log line.
+    """
 
     def format(self, record: logging.LogRecord) -> str:
+        # Java Bridge: get_tenant_id() reads from ContextVar — same idea as SLF4J MDC
+        # backed by ThreadLocal in Java; every log line carries tenant traceability.
+        tenant_id = get_tenant_id()
         log_obj = {
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
+            "tenant_id": tenant_id if tenant_id else "system",  # Startup/background: no request context
         }
         if record.exc_info:
             log_obj["exception"] = self.formatException(record.exc_info)

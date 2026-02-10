@@ -1,0 +1,37 @@
+---
+description: Core Business Logic & Multi-Tenancy Rules for Tutor SaaS (Micro-LMS)
+globs: backend/**/*.py, frontend/lib/**/*.dart
+---
+# Project: Tutor SaaS (Micro-LMS)
+**Vision:** A "Shopify for Tutors" — White-label platform for educators to launch branded apps.
+**Core Philosophy:** Content-First. Priority is delivering study materials over complex ERP features.
+
+## 1. Multi-Tenancy (The "Shared Database" Strategy)
+- **Architecture:** Shared Database, Shared Schema.
+- **Isolation:** Logically enforced via `tenant_id` column in every table.
+- **Security:** Data isolation is enforced by the **API Middleware (Gatekeeper)**, not just the query.
+- **Constraint:**
+  - **NEVER** pass `tenant_id` as a function argument in the Service/Repository layer.
+  - **ALWAYS** retrieve it via `tenant_context.get_tenant_id()`.
+
+## 2. Functional Modules (The Two Modes)
+### Mode A: Quick Dissemination ("WhatsApp Replacement")
+*For immediate sharing of unstructured resources.*
+- **Quick Notes:** Direct PDF upload to feed.
+- **Quick Video:** Direct video link/upload to feed.
+- **Hybrid Resource:** A single card combining a Video + Reference PDF.
+- **Independent Quiz:** A standalone assessment not tied to a chapter.
+
+### Mode B: Structured Learning ("The Course")
+*For comprehensive syllabus management.*
+- **Hierarchy:** `Syllabus` -> `Book` -> `Chapter` -> `Lesson` -> `Quiz`.
+- **Lesson Content:** Must support Video AND/OR Reading material.
+
+## 3. Tech Stack Constraints
+- **Backend:** FastAPI (Python) + Async SQLAlchemy.
+- **Frontend:** Flutter (Riverpod + Dio).
+- **Database:** PostgreSQL (Multi-tenant schema).
+
+## 4. Current Epic: Tenant Middleware (Epic 1)
+- **Goal:** Implement the "Gatekeeper" pattern.
+- **Requirement:** Middleware must extract `tenant_id` (subdomain/header) and validate it against the DB before any business logic executes.

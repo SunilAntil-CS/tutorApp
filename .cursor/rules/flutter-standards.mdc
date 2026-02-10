@@ -1,0 +1,43 @@
+---
+description: Flutter, Riverpod, and UI Standards for Tutor App
+globs: frontend/lib/**/*.dart
+---
+# Flutter & Riverpod Standards (Expert Level)
+
+**Reference:**
+- *PRD v2.1*: Mode A (Feed) vs Mode B (Course).
+- *Clean Architecture*: Separation of Data, Domain, and Presentation.
+
+## 1. State Management (Riverpod 2.0 Generator)
+- **Syntax:** MUST use `@riverpod` code generation (build_runner).
+- **Providers:**
+  - Use `AutoDisposeAsyncNotifier<T>` for data fetching (API calls).
+  - Use `AutoDisposeNotifier<T>` for synchronous UI state (Forms, Toggles).
+  - **Prohibit:** Do NOT use `StateProvider`, `ChangeNotifier`, or legacy `FutureProvider` without generation.
+- **Consumption:**
+  - Use `ref.watch` inside `build()` for reactive updates.
+  - Use `ref.read` inside callbacks (`onTap`) to trigger logic.
+  - **Safety:** ALWAYS handle `AsyncValue` with `.when(data: ..., error: ..., loading: ...)` in the UI to prevent "Grey Screen" crashes.
+
+## 2. Clean Architecture (Feature-First)
+- **Structure:** `lib/features/<feature_name>/`
+  - `data/`: Repositories, DTOs (Data Transfer Objects).
+  - `domain/`: Pure Entities (`@freezed` classes), failures.
+  - `presentation/`: Widgets, Controllers (Riverpod Notifiers).
+- **Repository Pattern:**
+  - Repositories must be accessed via Providers (`@riverpod`).
+  - **Error Handling:** Return `Future<T>` and throw custom `AppException` (caught by Controller).
+
+## 3. UI & Widget Guidelines
+- **Composability:** Break large widgets into smaller, private widgets (e.g., `_BatchListItem`).
+- **Const Correctness:** Use `const` constructors everywhere possible (Performance).
+- **Responsive:** Use `LayoutBuilder` or `MediaQuery` helpers. The app must work on Web (Desktop width) and Mobile.
+- **TextStyles:** Use `Theme.of(context).textTheme` instead of hardcoded styles.
+
+## 4. Navigation & Routing
+- **Router:** Use `GoRouter` for deep linking (Critical for "Share Lesson" feature in PRD).
+- **Type-Safe Routes:** Define route paths as constants.
+
+## 5. Data Models
+- **Immutability:** All Domain models must be `@freezed` (Immutable).
+- **Serialization:** Use `@JsonSerializable` for API DTOs.
