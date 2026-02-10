@@ -1,0 +1,38 @@
+---
+description: Python, FastAPI, and SQLModel Standards for Tutor App
+globs: backend/**/*.py
+---
+# Backend Standards (FastAPI + SQLModel)
+
+## 1. Code Architecture (The "3-Layer" Rule)
+- **API Layer (`api/`):** - Routes only handle HTTP request/response logic.
+  - MUST use `api.deps` for DB sessions (`session: AsyncSession = Depends(get_db)`).
+  - Return Pydantic schemas (DTOs), NEVER ORM models directly.
+- **Service Layer (`services/`):**
+  - Contains pure business logic.
+  - Transforms ORM models -> Pydantic DTOs.
+  - Example: `_book_to_response` helpers belong here.
+- **CRUD Layer (`crud/`):**
+  - Pure data access. returns `SQLModel` objects.
+  - **Context-Aware:** DO NOT pass `tenant_id` as an argument. Retrieve it via `tenant_context.get_tenant_id()` to prevent data leaks.
+
+## 2. Asynchronous Patterns
+- **Async/Await:** All I/O bound operations (DB, External APIs) MUST be `async`.
+- **Session Management:** Use `AsyncSession`. NEVER use synchronous `Session`.
+- **Querying:** Use `await session.execute(select(Model))` syntax. Avoid legacy `session.query()`.
+
+## 3. SQLModel & Database
+- **Schema:** All models must inherit from `SQLModel, table=True`.
+- **Migrations:** Schema changes require Alembic. NEVER rely on `SQLModel.metadata.create_all` in production.
+- **IDs:** Use `UUID` (v4) for primary keys.
+- **Foreign Keys:** Always index foreign keys (e.g., `tenant_id: str = Field(..., index=True)`).
+
+## 4. Error Handling & Logging
+- **Exceptions:** Use `fastapi.HTTPException` in the Service/API layer.
+- **Logging:** Use `logging_config.get_logger`. NEVER use `print()`.
+- **Traceability:** Log the `tenant_id` and `request_id` in middleware (already implemented in `main.py`, maintain this).
+
+## 5. Coding Style (Expert Python)
+- **Type Hints:** Strict typing required. Use `str | None` instead of `Optional[str]`.
+- **Docstrings:** Required for all public functions in `services` and `crud`.
+- **Imports:** Absolute imports only (e.g., `from models.content import Book`, not `from ..models import Book`).

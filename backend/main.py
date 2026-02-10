@@ -17,9 +17,16 @@ from starlette.requests import Request
 
 from config import settings
 from logging_config import get_logger, setup_logging
+from core.tenant_context import set_tenant_id
 
 setup_logging()
 log = get_logger("main")
+
+# --- Task 1.2.3 Verification: tenant-aware logging (remove after DoD) ---
+set_tenant_id("school_a")
+log.info("Test log")
+# Expected stdout: {"level": "INFO", "tenant_id": "school_a", "message": "Test log", ...}
+# --- End verification snippet ---
 
 # Import models so SQLModel.metadata knows about all tables
 from models.content import (  # noqa: F401

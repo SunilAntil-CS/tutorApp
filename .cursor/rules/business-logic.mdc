@@ -1,0 +1,28 @@
+description: Core Business Logic & Multi-Tenancy Rules for Tutor SaaS
+globs: backend/**/*.py, frontend/lib/**/*.dart
+---
+# Project: Tutor SaaS (Micro-LMS)
+A white-label platform allowing educators to launch their own branded apps.
+
+## 1. Multi-Tenancy (The Golden Rule)
+- **Architecture:** Shared Database, Shared Schema.
+- **Isolation:** Data isolation is enforced LOGICALLY via the `tenant_id` column.
+- **Constraint:** EVERY database table (except `tenants`) MUST have a `tenant_id` column.
+- **Constraint:** EVERY database query (SELECT, UPDATE, DELETE) MUST filter by `tenant_id` derived from the current request context.
+
+## 2. Tenant Context (Backend)
+- **Source of Truth:** The current tenant is determined by the `X-Tenant-ID` header or Subdomain.
+- **Storage:** Use `backend.core.tenant_context` (ContextVar) to store the `tenant_id`.
+- **Access:** - NEVER pass `tenant_id` as a function argument down the service layer.
+  - ALWAYS retrieve it via `tenant_context.get_tenant_id()` inside Repositories.
+- **Middleware:** The "Extraction Layer" sets the context; the "Validation Layer" (Dependency) enforces it.
+
+## 3. Core Entities
+- **Content Hierarchy:** `Book` -> `Chapter` -> `Lesson` -> `Quiz`.
+- **Quick Resources:** `Lesson` can exist without a `Book` (Quick Notes).
+- **Users:** A `User` belongs to a specific `Tenant`. Email uniqueness is scoped to `tenant_id` (not global).
+
+## 4. Current Focus (Epic 2: Tenant Middleware)
+- **Task:** Implement the "Split-Layer Pipeline" for tenant resolution.
+- **Layer 1 (Middleware):** Extract `X-Tenant-ID`, set ContextVar. NON-BLOCKING (No DB calls).
+- **Layer 2 (Dependency):** `get_current_tenant_id`. Validates tenant against DB using `async-lru` cache. Returns 403 if invalid.
