@@ -25,14 +25,14 @@ class CRUDContent:
     async def get_books(self, session: AsyncSession) -> list[Book]:
         """Select all books for the current tenant, ordered by grade then title."""
         tenant_id = _require_tenant_id()
-        stmt = select(Book).where(Book.tenant_id == tenant_id).order_by(Book.grade, Book.title)
+        stmt = select(Book).where(Book.tenant_id == tenant_id).order_by(Book.grade, Book.title)  # type: ignore[arg-type]
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
     async def get_book_by_id(self, session: AsyncSession, book_id: UUID) -> Book | None:
         """Select a single book by id (tenant-scoped)."""
         tenant_id = _require_tenant_id()
-        stmt = select(Book).where(Book.id == book_id, Book.tenant_id == tenant_id)
+        stmt = select(Book).where(Book.id == book_id, Book.tenant_id == tenant_id)  # type: ignore[arg-type]
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -60,8 +60,8 @@ class CRUDContent:
         tenant_id = _require_tenant_id()
         stmt = (
             select(Chapter)
-            .where(Chapter.book_id == book_id, Chapter.tenant_id == tenant_id)
-            .order_by(Chapter.sequence_number)
+            .where(Chapter.book_id == book_id, Chapter.tenant_id == tenant_id)  # type: ignore[arg-type]
+            .order_by(Chapter.sequence_number)  # type: ignore[arg-type]
         )
         result = await session.execute(stmt)
         return list(result.scalars().all())
@@ -89,7 +89,7 @@ class CRUDContent:
         tenant_id = _require_tenant_id()
         stmt = (
             select(Lesson)
-            .where(Lesson.chapter_id == chapter_id, Lesson.tenant_id == tenant_id)
+            .where(Lesson.chapter_id == chapter_id, Lesson.tenant_id == tenant_id)  # type: ignore[arg-type]
             .order_by(Lesson.title)
         )
         result = await session.execute(stmt)
@@ -100,9 +100,9 @@ class CRUDContent:
     ) -> list[Lesson]:
         """Select standalone lessons (Quick Concepts) for current tenant. Optional filter by subject."""
         tenant_id = _require_tenant_id()
-        stmt = select(Lesson).where(Lesson.is_quick_note == True, Lesson.tenant_id == tenant_id)
+        stmt = select(Lesson).where(Lesson.is_quick_note == True, Lesson.tenant_id == tenant_id)  # type: ignore[arg-type]
         if subject is not None:
-            stmt = stmt.where(Lesson.subject == subject)
+            stmt = stmt.where(Lesson.subject == subject)  # type: ignore[arg-type]
         stmt = stmt.order_by(Lesson.title)
         result = await session.execute(stmt)
         return list(result.scalars().all())
@@ -110,7 +110,7 @@ class CRUDContent:
     async def get_lesson_by_id(self, session: AsyncSession, lesson_id: UUID) -> Lesson | None:
         """Select a single lesson by id (tenant-scoped)."""
         tenant_id = _require_tenant_id()
-        stmt = select(Lesson).where(Lesson.id == lesson_id, Lesson.tenant_id == tenant_id)
+        stmt = select(Lesson).where(Lesson.id == lesson_id, Lesson.tenant_id == tenant_id)  # type: ignore[arg-type]
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -150,7 +150,7 @@ class CRUDContent:
     async def get_quiz_by_lesson_id(self, session: AsyncSession, lesson_id: UUID) -> Quiz | None:
         """Select the quiz for a lesson (tenant-scoped, if any)."""
         tenant_id = _require_tenant_id()
-        stmt = select(Quiz).where(Quiz.lesson_id == lesson_id, Quiz.tenant_id == tenant_id)
+        stmt = select(Quiz).where(Quiz.lesson_id == lesson_id, Quiz.tenant_id == tenant_id)  # type: ignore[arg-type]
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -177,9 +177,9 @@ class CRUDContent:
         """Get progress for a user on a lesson (tenant-scoped)."""
         tenant_id = _require_tenant_id()
         stmt = select(LessonProgress).where(
-            LessonProgress.tenant_id == tenant_id,
-            LessonProgress.user_id == user_id,
-            LessonProgress.lesson_id == lesson_id,
+            LessonProgress.tenant_id == tenant_id,  # type: ignore[arg-type]
+            LessonProgress.user_id == user_id,  # type: ignore[arg-type]
+            LessonProgress.lesson_id == lesson_id,  # type: ignore[arg-type]
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()

@@ -1,4 +1,4 @@
-"""Content API DTOs (Pydantic response models). Match API Interface Design in ARCHITECTURE.md."""
+"""Content API DTOs (Pydantic response models). """
 
 from uuid import UUID
 

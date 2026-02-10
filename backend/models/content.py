@@ -15,7 +15,7 @@ from sqlmodel import Field, Relationship, SQLModel
 class Tenant(SQLModel, table=True):
     """Tenant (school/organization) for multi-tenant isolation."""
 
-    __tablename__ = "tenants"
+    __tablename__ = "tenants"  # type: ignore[assignment]
 
     id: str = Field(primary_key=True, max_length=64)
     name: str
@@ -26,7 +26,7 @@ class Tenant(SQLModel, table=True):
 class User(SQLModel, table=True):
     """User belonging to a tenant. Same email can exist in different tenants."""
 
-    __tablename__ = "users"
+    __tablename__ = "users"  # type: ignore[assignment]
     __table_args__ = (UniqueConstraint("email", "tenant_id", name="uq_user_email_per_tenant"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -44,7 +44,7 @@ class User(SQLModel, table=True):
 class Book(SQLModel, table=True):
     """Book (e.g. Science Class 10)."""
 
-    __tablename__ = "books"
+    __tablename__ = "books"  # type: ignore[assignment]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     tenant_id: str = Field(foreign_key="tenants.id", index=True)
@@ -58,7 +58,7 @@ class Book(SQLModel, table=True):
 class Chapter(SQLModel, table=True):
     """Chapter (e.g. Chemical Reactions) belonging to a Book."""
 
-    __tablename__ = "chapters"
+    __tablename__ = "chapters"  # type: ignore[assignment]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     book_id: UUID = Field(foreign_key="books.id")
@@ -70,7 +70,7 @@ class Chapter(SQLModel, table=True):
 class Lesson(SQLModel, table=True):
     """Lesson: either in a Chapter (chapter_id set) or standalone Quick Note (chapter_id None)."""
 
-    __tablename__ = "lessons"
+    __tablename__ = "lessons"  # type: ignore[assignment]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     chapter_id: UUID | None = Field(default=None, foreign_key="chapters.id")
@@ -89,7 +89,7 @@ class Lesson(SQLModel, table=True):
 class Quiz(SQLModel, table=True):
     """Quiz (One-to-One with Lesson). MCQ questions in separate Question table."""
 
-    __tablename__ = "quizzes"
+    __tablename__ = "quizzes"  # type: ignore[assignment]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     lesson_id: UUID = Field(foreign_key="lessons.id")
@@ -103,7 +103,7 @@ class Quiz(SQLModel, table=True):
 class Question(SQLModel, table=True):
     """MCQ question (Many-to-One with Quiz). correct_answer is A/B/C/D."""
 
-    __tablename__ = "questions"
+    __tablename__ = "questions"  # type: ignore[assignment]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     quiz_id: UUID = Field(foreign_key="quizzes.id")
@@ -121,7 +121,7 @@ class Question(SQLModel, table=True):
 class LessonProgress(SQLModel, table=True):
     """User progress on a lesson (completed, quiz score). One row per user per lesson."""
 
-    __tablename__ = "lesson_progress"
+    __tablename__ = "lesson_progress"  # type: ignore[assignment]
     __table_args__ = (UniqueConstraint("user_id", "lesson_id", name="uq_lesson_progress_user_lesson"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -140,7 +140,7 @@ class LessonProgress(SQLModel, table=True):
 class Concept(SQLModel, table=True):
     """Learning concept/topic (tenant-scoped). Used for tagging and analytics."""
 
-    __tablename__ = "concepts"
+    __tablename__ = "concepts"  # type: ignore[assignment]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     tenant_id: str = Field(foreign_key="tenants.id", index=True)
@@ -151,7 +151,7 @@ class Concept(SQLModel, table=True):
 class LearningEvent(SQLModel, table=True):
     """Audit/analytics event (e.g. lesson started, quiz completed)."""
 
-    __tablename__ = "learning_events"
+    __tablename__ = "learning_events"  # type: ignore[assignment]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     tenant_id: str = Field(foreign_key="tenants.id", index=True)

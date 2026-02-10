@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from async_lru import alru_cache
+from async_lru import alru_cache  # type: ignore[import-untyped]
 from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select

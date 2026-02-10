@@ -4,6 +4,20 @@ The server works when you `curl` it, but the Flutter app still can't connect. Fo
 
 ---
 
+## Run the frontend and send tenant
+
+The backend expects the **X-Tenant-ID** header for `/api/v1/content/*`. The app sends it automatically (default: `default`). You can override the tenant at run time:
+
+| Platform   | Command |
+|-----------|---------|
+| **Chrome** | `cd frontend && flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000 --dart-define=TENANT_ID=default` |
+| **Android** | `adb reverse tcp:8000 tcp:8000` then `cd frontend && flutter run --dart-define=API_BASE_URL=http://localhost:8000 --dart-define=TENANT_ID=default` |
+| **Other tenant** | Use `--dart-define=TENANT_ID=school-b` (or any tenant ID that exists in your DB). |
+
+If you omit `API_BASE_URL`, the app uses the default (VPS). If you omit `TENANT_ID`, it uses `default`.
+
+---
+
 ## Step 1: Restart the backend (so CORS is active)
 
 From the **project root** (`tutorApp`):
