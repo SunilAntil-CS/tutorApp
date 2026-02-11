@@ -15,7 +15,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-    ports:
+    expose:
       - "6666"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6666/health"]
