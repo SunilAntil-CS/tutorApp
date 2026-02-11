@@ -50,7 +50,7 @@ USER app
 EXPOSE 6666
 
 HEALTHCHECK --interval=60s --timeout=5s --start-period=15s --retries=3 \
-    CMD curl --fail http://localhost:8001/health || exit 1
+    CMD curl --fail http://localhost:6666/health || exit 1
 
 # 7. Production Command: Added proxy headers for Coolify's Traefik proxy
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "6666", "--proxy-headers", "--forwarded-allow-ips='*'"]
